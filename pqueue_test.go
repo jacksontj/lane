@@ -65,18 +65,18 @@ func TestMinPQueue_init(t *testing.T) {
 
 func TestPQueueRemove(t *testing.T) {
 	pqueue := NewPQueue(MAXPQ)
-	pqueueSize := 10
+	pqueueSize := uint(10)
 	// Populate the test priority queue with dummy elements
 	// in asc ordered.
 	items := make([]*Item, pqueueSize)
-	for i := 0; i < pqueueSize; i++ {
-		var value string = strconv.Itoa(i)
+	for i := uint(0); i < pqueueSize; i++ {
+		var value string = strconv.FormatUint(uint64(i), 10)
 
 		items[i] = pqueue.Push(value, 0)
 	}
 
-	removed := 0
-	for i := (pqueueSize / 2) - 1; i >= 0; i-- {
+	removed := uint(0)
+	for i := int((pqueueSize / 2) - 1); i >= 0; i-- {
 		pqueue.Remove(items[i])
 		removed++
 		if pqueue.Size() != pqueueSize-removed {
@@ -87,21 +87,19 @@ func TestPQueueRemove(t *testing.T) {
 
 func TestMaxPQueuePushAndPop_protects_max_order(t *testing.T) {
 	pqueue := NewPQueue(MAXPQ)
-	pqueueSize := 100
+	pqueueSize := uint(100)
 
 	// Populate the test priority queue with dummy elements
 	// in asc ordered.
-	for i := 0; i < pqueueSize; i++ {
-		var value string = strconv.Itoa(i)
-		var priority int = i
-
-		pqueue.Push(value, priority)
+	for i := uint(0); i < pqueueSize; i++ {
+		var value string = strconv.FormatUint(uint64(i), 10)
+		pqueue.Push(value, int64(i))
 	}
 
 	containerIndex := 1 // binary heap are 1 indexed
 	for i := 99; i >= 0; i-- {
 		var expectedValue string = strconv.Itoa(i)
-		var expectedPriority int = i
+		expectedPriority := int64(i)
 
 		// Avoiding testing arithmetics headaches by using the pop function directly
 		value, priority := pqueue.Pop()
@@ -135,7 +133,7 @@ func TestMaxPQueuePushAndPop_concurrently_protects_max_order(t *testing.T) {
 			defer wg.Done()
 
 			var value string = strconv.Itoa(i)
-			var priority int = i
+			priority := int64(i)
 			pqueue.Push(value, priority)
 		}(i)
 	}
@@ -145,7 +143,7 @@ func TestMaxPQueuePushAndPop_concurrently_protects_max_order(t *testing.T) {
 	containerIndex := 1 // binary heap are 1 indexed
 	for i := 99; i >= 0; i-- {
 		var expectedValue string = strconv.Itoa(i)
-		var expectedPriority int = i
+		expectedPriority := int64(i)
 
 		// Avoiding testing arithmetics headaches by using the pop function directly
 		value, priority := pqueue.Pop()
@@ -172,14 +170,14 @@ func TestMinPQueuePushAndPop_protects_min_order(t *testing.T) {
 	// in asc ordered.
 	for i := 0; i < pqueueSize; i++ {
 		var value string = strconv.Itoa(i)
-		var priority int = i
+		priority := int64(i)
 
 		pqueue.Push(value, priority)
 	}
 
 	for i := 0; i < pqueueSize; i++ {
 		var expectedValue string = strconv.Itoa(i)
-		var expectedPriority int = i
+		expectedPriority := int64(i)
 
 		// Avoiding testing arithmetics headaches by using the pop function directly
 		value, priority := pqueue.Pop()
@@ -211,7 +209,7 @@ func TestMinPQueuePushAndPop_concurrently_protects_min_order(t *testing.T) {
 			defer wg.Done()
 
 			var value string = strconv.Itoa(i)
-			var priority int = i
+			priority := int64(i)
 
 			pqueue.Push(value, priority)
 		}(i)
@@ -221,7 +219,7 @@ func TestMinPQueuePushAndPop_concurrently_protects_min_order(t *testing.T) {
 
 	for i := 0; i < pqueueSize; i++ {
 		var expectedValue string = strconv.Itoa(i)
-		var expectedPriority int = i
+		expectedPriority := int64(i)
 
 		// Avoiding testing arithmetics headaches by using the pop function directly
 		value, priority := pqueue.Pop()
