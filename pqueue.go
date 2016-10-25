@@ -13,9 +13,10 @@ const (
 	MINPQ
 )
 
-type item struct {
+type Item struct {
 	value    interface{}
 	priority int
+	index    int
 }
 
 // PQueue is a heap priority queue data structure implementation.
@@ -23,20 +24,20 @@ type item struct {
 // and is safe for concurrent operations.
 type PQueue struct {
 	sync.RWMutex
-	items      []*item
+	items      []*Item
 	elemsCount int
 	comparator func(int, int) bool
 }
 
-func newItem(value interface{}, priority int) *item {
-	return &item{
+func newItem(value interface{}, priority int) *Item {
+	return &Item{
 		value:    value,
 		priority: priority,
 	}
 }
 
-func (i *item) String() string {
-	return fmt.Sprintf("<item value:%s priority:%d>", i.value, i.priority)
+func (i *Item) String() string {
+	return fmt.Sprintf("<item value:%s priority:%d index:%d>", i.value, i.priority, i.index)
 }
 
 // NewPQueue creates a new priority queue with the provided pqtype
@@ -50,7 +51,7 @@ func NewPQueue(pqType PQType) *PQueue {
 		cmp = min
 	}
 
-	items := make([]*item, 1)
+	items := make([]*Item, 1)
 	items[0] = nil // Heap queue first element should always be nil
 
 	return &PQueue{
@@ -61,14 +62,16 @@ func NewPQueue(pqType PQType) *PQueue {
 }
 
 // Push the value item into the priority queue with provided priority.
-func (pq *PQueue) Push(value interface{}, priority int) {
+func (pq *PQueue) Push(value interface{}, priority int) *Item {
 	item := newItem(value, priority)
 
 	pq.Lock()
+	item.index = pq.elemsCount + 1
 	pq.items = append(pq.items, item)
 	pq.elemsCount += 1
 	pq.swim(pq.size())
 	pq.Unlock()
+	return item
 }
 
 // Pop and returns the highest/lowest priority item (depending on whether
@@ -81,7 +84,7 @@ func (pq *PQueue) Pop() (interface{}, int) {
 		return nil, 0
 	}
 
-	var max *item = pq.items[1]
+	var max *Item = pq.items[1]
 
 	pq.exch(1, pq.size())
 	pq.items = pq.items[0:pq.size()]
@@ -121,6 +124,23 @@ func (pq *PQueue) Empty() bool {
 	return pq.size() == 0
 }
 
+func (pq *PQueue) Remove(i *Item) bool {
+	pq.Lock()
+	defer pq.Unlock()
+
+	if pq.size() < 1 {
+		return false
+	}
+
+	if pq.size() > i.index+1 {
+		pq.items = append(pq.items[:i.index], pq.items[i.index+1:len(pq.items)]...)
+	} else {
+		pq.items = pq.items[:i.index]
+	}
+	pq.elemsCount -= 1
+	return true
+}
+
 func (pq *PQueue) size() int {
 	return pq.elemsCount
 }
@@ -138,10 +158,12 @@ func (pq *PQueue) less(i, j int) bool {
 }
 
 func (pq *PQueue) exch(i, j int) {
-	var tmpItem *item = pq.items[i]
+	var tmpItem *Item = pq.items[i]
 
 	pq.items[i] = pq.items[j]
+	pq.items[i].index = i
 	pq.items[j] = tmpItem
+	pq.items[j].index = j
 }
 
 func (pq *PQueue) swim(k int) {

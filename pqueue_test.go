@@ -63,6 +63,28 @@ func TestMinPQueue_init(t *testing.T) {
 	)
 }
 
+func TestPQueueRemove(t *testing.T) {
+	pqueue := NewPQueue(MAXPQ)
+	pqueueSize := 10
+	// Populate the test priority queue with dummy elements
+	// in asc ordered.
+	items := make([]*Item, pqueueSize)
+	for i := 0; i < pqueueSize; i++ {
+		var value string = strconv.Itoa(i)
+
+		items[i] = pqueue.Push(value, 0)
+	}
+
+	removed := 0
+	for i := (pqueueSize / 2) - 1; i >= 0; i-- {
+		pqueue.Remove(items[i])
+		removed++
+		if pqueue.Size() != pqueueSize-removed {
+			t.Errorf("Bad")
+		}
+	}
+}
+
 func TestMaxPQueuePushAndPop_protects_max_order(t *testing.T) {
 	pqueue := NewPQueue(MAXPQ)
 	pqueueSize := 100
