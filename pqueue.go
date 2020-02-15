@@ -87,6 +87,7 @@ func (pq *PQueue) Pop() (interface{}, int64) {
 	var max *Item = pq.items[1]
 
 	pq.exch(1, pq.size())
+	pq.items[pq.size()] = nil	// Free the space
 	pq.items = pq.items[0:pq.size()]
 	pq.elemsCount -= 1
 	pq.sink(1)
