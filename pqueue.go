@@ -17,6 +17,7 @@ type Item struct {
 	value    interface{}
 	priority int64
 	index    uint
+	removed  bool
 }
 
 // PQueue is a heap priority queue data structure implementation.
@@ -33,6 +34,7 @@ func newItem(value interface{}, priority int64) *Item {
 	return &Item{
 		value:    value,
 		priority: priority,
+		removed: false,
 	}
 }
 
@@ -88,7 +90,7 @@ func (pq *PQueue) Pop() (interface{}, int64) {
 
 	pq.exch(1, pq.size())
 
-	pq.items[pq.size()].index=-1 //if the item has being removed with pop, we mark it so that it cant be removed again with remove()
+	pq.items[pq.size()].removed = true//if the item has being removed with pop, we mark it so that it cant be removed again with remove()
 	pq.items[pq.size()] = nil	// Free the space
 	pq.items = pq.items[0:pq.size()]
 	pq.elemsCount -= 1
@@ -131,7 +133,7 @@ func (pq *PQueue) Remove(i *Item) bool {
 	pq.Lock()
 	defer pq.Unlock()
 
-	if pq.size() < 1 || i.index == -1{
+	if pq.size() < 1 || i.removed {
 		return false
 	}
 	if pq.size() > i.index+1 {
